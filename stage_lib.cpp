@@ -1,28 +1,21 @@
 #include "stage_lib.h"
 
 
-/* start_pipline():     parameters-sateges_handler , bit is_pipe
- *                      action- PIPELINE_ON = is_pipe, active stages
- * stop_pipeline():    parameters- sateges_handler
- *                      action- shut PIPELINE_ON , finish stages
- */
 void* create_handler_api(void* pipe_header){
 
-    handler* my_handler=(handler*)malloc(sizeof (handler));
+    stage_handler* my_handler=(stage_handler*)malloc(sizeof (stage_handler));
     my_handler->head=(stage*)pipe_header;
     my_handler->PIPELINE_ON=0;
     init_rgb_matrix();
 
     return my_handler;
 }
-
 void free_handler_api(void* my_handler){
     handler* handle=(handler*)my_handler;
     if(handle==NULL)
         return;
     free(handle);
 }
-
 void* create_stage_api(Queue* sourse, Queue* dest, function func, void* params ,stage* next){
 
     stage* my_stage=(stage*)malloc(sizeof(stage));
@@ -35,7 +28,6 @@ void* create_stage_api(Queue* sourse, Queue* dest, function func, void* params ,
     my_stage->params=params;
     return my_stage;
 }
-
 void free_stage_api(void* my_stage){
 
     if(my_stage==NULL)
@@ -70,7 +62,7 @@ void free_stages_and_queues_api(void* my_stage){
 
 void stop_pipe_api(void* my_handler){
 
-    handler* handle=((handler*)my_handler);
+    stage_handler* handle=((stage_handler*)my_handler);
     handle->PIPELINE_ON=0;
     //finish stages threads
     stage* ptr=handle->head;
@@ -142,7 +134,7 @@ void* main_stage_thread_api(void* arg){
 }
 void start_pipe_api(void* handle, int is_pipe){
 
-    handler* my_handler=(handler*)handle;
+    stage_handler* my_handler=(stage_handler*)handle;
     my_handler->PIPELINE_ON=is_pipe;
     stage* ptr=my_handler->head;
     stage_params *params;

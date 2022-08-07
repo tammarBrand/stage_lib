@@ -26,12 +26,12 @@ typedef struct stage{
     void* params;
 }stage;
 struct stage_params;
-typedef struct handler{
+typedef struct stage_handler{
     stage * head;
     struct stage_params* params_head;
     bool PIPELINE_ON;
 
-}handler;
+}tage_handler;
 
 typedef struct stage_params{
     stage* my_stage;
