@@ -11,6 +11,7 @@ void* create_handler_api(void* pipe_header){
     handler* my_handler=(handler*)malloc(sizeof (handler));
     my_handler->head=(stage*)pipe_header;
     my_handler->PIPELINE_ON=0;
+    init_rgb_matrix();
 
     return my_handler;
 }
@@ -171,7 +172,7 @@ void start_pipe_api(void* handle, int is_pipe){
 
 
 stage_t stage_api={
-    .init_rgb_matrix=init_rgb_matrix,
+
     .create_handler=create_handler_api,
     .free_handler=free_handler_api,
     .create_stage=create_stage_api,

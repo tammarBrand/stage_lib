@@ -97,7 +97,7 @@ typedef struct stage_params{
 
 
 typedef struct stage_t{
-    void (*init_rgb_matrix)();
+
     void* (*create_handler)(void* pipe_header);
     void (*free_handler)(void* my_handler);
     void* (*create_stage)(Queue* sourse, Queue* dest, function func, void* params ,stage* next);
