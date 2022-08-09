@@ -1,6 +1,8 @@
 #include "stage_lib.h"
 
 
+void* main_stage_thread_api(void* arg);
+
 void* create_handler_api(void* pipe_header){
 
     stage_handler* my_handler=(stage_handler*)malloc(sizeof (stage_handler));
@@ -55,8 +57,36 @@ void free_stages_and_queues_api(void* my_stage){
     }
 
 }
+void start_pipe_api(void* handle, int stages_number,int is_pipe){
 
+    stage_handler* my_handler=(stage_handler*)handle;
+    my_handler->PIPELINE_ON=is_pipe;
+    stage* ptr=my_handler->head;
+    stage_params *params;
+    bool first=0;
+    int i=stages_number;
 
+    while (ptr!=NULL&&i>0) {
+        i--;
+        params=(stage_params*)malloc(sizeof(stage_params));
+        params->PIPELINE_ON=&(my_handler->PIPELINE_ON);
+        params->my_stage=ptr;
+        params->next=NULL;
+
+        pthread_create(&(ptr->thread),NULL,main_stage_thread_api,params);
+
+        if(!first){
+            my_handler->params_head=params;
+            first=1;
+        }
+
+        ptr=ptr->next;
+    }
+    i=stages_number-i;
+
+    printf("%d stages are active\n",i);
+
+}
 void stop_pipe_api(void* my_handler){
 
     stage_handler* handle=((stage_handler*)my_handler);
@@ -91,76 +121,43 @@ void* main_stage_thread_api(void* arg){
     stage* my_stage=((stage_params*)arg)->my_stage;
 
 
-    Node *dest ,*n=(Node*)calloc(1,sizeof(Node));// last node to enter the pipeline
-    void* data;
-
-    if(my_stage->sourseQu!=NULL){
-        freeNode(n);
-        n=dequeue(my_stage->sourseQu);
-    }
+    Node *message;// last node to enter the pipeline
 
     do{
-        data=my_stage->func(n->data, my_stage->params);
-        if(my_stage->destQu!=NULL){
-            dest=createNode(data);
-            enqueu(my_stage->destQu,dest);
-        }
-        if(my_stage->sourseQu!=NULL){
-            freeNode(n);
-            n=dequeue(my_stage->sourseQu);
-            my_stage->is_active=n->data!=NULL;
-        }
-        else{/*
-              *for first thread
-              *continue only if it's in the middle of a record
-              */
-            my_stage->is_active=*PIPELINE_ON;
-        }
         sleep(2);
+        if(my_stage->sourseQu==NULL){
+            /* for first stage ->  creating a new message to send*/
+            message=createNode(NULL);
+          }
+        else{
+            /* for the others stages get message to send from the previous stage's data */
+            message=dequeue(my_stage->sourseQu);
+            }
+
+        message->data=my_stage->func(message->data, my_stage->params);
+
+        if(my_stage->destQu==NULL){
+            /* for last stage finish the message's cycle */
+             freeNode(message);
+        }
+        else{
+            /*for the others sending the message */
+            enqueu(my_stage->destQu,message);
+        }
+
+        if(my_stage->sourseQu==NULL){
+            /* first stage condition for stoping is PIPELINE_ON variable */
+            my_stage->is_active=*PIPELINE_ON;
+          }
+        else{
+            /* other stages' condition for stoping is geting NULL data value*/
+            my_stage->is_active=message->data!=NULL;
+            }
+
+
     }while(my_stage->is_active);
 
-
-    if(my_stage->destQu!=NULL){
-        enqueu(my_stage->destQu,n);
-    }
-    else{//last thread to pipeline only
-
-        freeNode(n);
-    }
-
 }
-
-void start_pipe_api(void* handle, int stages_number,int is_pipe){
-
-    stage_handler* my_handler=(stage_handler*)handle;
-    my_handler->PIPELINE_ON=is_pipe;
-    stage* ptr=my_handler->head;
-    stage_params *params;
-    bool first=0;
-    int i=stages_number;
-
-    while (ptr!=NULL&&i>0) {
-        i--;
-        params=(stage_params*)malloc(sizeof(stage_params));
-        params->PIPELINE_ON=&(my_handler->PIPELINE_ON);
-        params->my_stage=ptr;
-        params->next=NULL;
-
-        pthread_create(&(ptr->thread),NULL,main_stage_thread_api,params);
-
-        if(!first){
-            my_handler->params_head=params;
-            first=1;
-        }
-
-        ptr=ptr->next;
-    }
-    i=stages_number-i;
-
-    printf("%d stages are active\n",i);
-
-}
-
 
 stage_t stage_api={
 
@@ -168,10 +165,18 @@ stage_t stage_api={
     .free_handler=free_handler_api,
     .create_stage=create_stage_api,
     .free_stage=free_stage_api,
-   /* .free_stages=free_stages_api,
-    .free_stages_and_queues=free_stages_and_queues_api,*/
+    /* .free_stages=free_stages_api,
+        .free_stages_and_queues=free_stages_and_queues_api,*/
     .start_pipe=start_pipe_api,
     .stop_pipe=stop_pipe_api,
     .main_stage_thread=main_stage_thread_api
 };
 
+
+/*
+ *  TOPUT:
+             if(!my_stage->is_active)
+                printf("---000---- capture is finishing---0000---\n");
+            if(!my_stage->is_active)
+                printf("---000----finishing---0000---\n");
+*/
