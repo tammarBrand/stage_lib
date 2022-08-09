@@ -11,28 +11,14 @@ CONFIG += c++11
 LIBS+= -L/usr/lib/x86_64-linux-gnu/libjpeg.so -ljpeg
 SOURCES += \
     Queue.c \
-    capture.c \
-    encode.c \
-    functions_tools.c \
-    main.c \
-    rgb_converter.c \
-    save_snapshot.c \
-    stage_lib.cpp \
-    write_record.c \
-    yuv_converter.c
+    stage_lib.c
+
 
 HEADERS += \
-    Queue.h \
-    capture.h \
-    encode.h \
-    functions_tools.h \
-    rgb_converter.h \
-    save_snapshot.h \
+    Queue.h \   
     stage_lib.h\
-    jpeglib.h \
-    stage_lib_global.h \
-    write_record.h \
-    yuv_converter.h
+    jpeglib.h
+
 
 # Default rules for deployment.
 unix {

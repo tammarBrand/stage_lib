@@ -9,7 +9,7 @@ void* create_handler_api(void* pipe_header){
     return my_handler;
 }
 void free_handler_api(void* my_handler){
-    handler* handle=(handler*)my_handler;
+    stage_handler* handle=(stage_handler*)my_handler;
     if(handle==NULL)
         return;
     free(handle);
@@ -155,6 +155,7 @@ void start_pipe_api(void* handle, int stages_number,int is_pipe){
 
         ptr=ptr->next;
     }
+    i=stages_number-i;
 
     printf("%d stages are active\n",i);
 
